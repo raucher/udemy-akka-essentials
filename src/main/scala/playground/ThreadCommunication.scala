@@ -27,30 +27,34 @@ object ThreadCommunication extends App {
 
   val container = new SimpleContainer()
 
-  val consumer = new Thread(() => {
-    println("[consumer] starts...")
+  def naiveProdCons = {
+    val consumer = new Thread(() => {
+      println("[consumer] starts...")
 
-    while (container.isEmpty) {
-      println("[consumer] actively waiting...")
-    }
+      while (container.isEmpty) {
+        println("[consumer] actively waiting...")
+      }
 
-    println(s"[consumer] consumes ${container.get()}")
-  })
+      println(s"[consumer] consumes ${container.get()}")
+    })
 
-  val producer = new Thread(() => {
-    println("[producer] starts...")
-    if (container.isEmpty) {
-      println("[producer] computing...")
-      val newVal = 42
-      println(s"[producer] has computed $newVal")
-      container.set(42)
-    } else {
-      println("[producer] waiting value to be consumed...")
-    }
-  })
+    val producer = new Thread(() => {
+      println("[producer] starts...")
+      if (container.isEmpty) {
+        println("[producer] computing...")
+        val newVal = 42
+        println(s"[producer] has computed $newVal")
+        container.set(42)
+      } else {
+        println("[producer] waiting value to be consumed...")
+      }
+    })
 
-  consumer.start()
-  producer.start()
-  consumer.join()
-  producer.join()
+    consumer.start()
+    producer.start()
+    consumer.join()
+    producer.join()
+  }
+
+//  naiveProdCons
 }
