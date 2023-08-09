@@ -5,7 +5,7 @@ object ThreadCommunication extends App {
     private var value: Int = 0
 
     /**
-      * sets new value. Has no side-effects
+      * Sets new value. Has no side-effects
       *
       * @param newValue
       */
