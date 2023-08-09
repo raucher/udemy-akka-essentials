@@ -1,5 +1,6 @@
 package playground
 
+import scala.collection.mutable
 import scala.util.Random
 
 object ThreadCommunication extends App {
@@ -148,31 +149,31 @@ object ThreadCommunication extends App {
               buffer.notifyAll()
               println(s"[$name] buffer is empty, waiting...")
               buffer.wait()
-            } else {
-              println(s"[$name] consuming value")
-              println(s"[$name] consumed ${buffer.get()}")
             }
+            println(s"[$name] consuming value")
+            println(s"[$name] consumed ${buffer.get()}")
+
           }
         }
       }
     }
 
-//    val consumer1 = new Thread(() => {
-//      println("[consumer] started")
-//      buffer.synchronized {
-//        while (true) {
-//          if (buffer.isEmpty) {
-//            println("[consumer] notifies all waiting threads")
-//            buffer.notifyAll()
-//            println("[consumer] buffer is empty, waiting...")
-//            buffer.wait()
-//          } else {
-//            println("[consumer] consuming value")
-//            println(s"[consumer] consumed ${buffer.get()}")
-//          }
-//        }
-//      }
-//    })
+    //    val consumer1 = new Thread(() => {
+    //      println("[consumer] started")
+    //      buffer.synchronized {
+    //        while (true) {
+    //          if (buffer.isEmpty) {
+    //            println("[consumer] notifies all waiting threads")
+    //            buffer.notifyAll()
+    //            println("[consumer] buffer is empty, waiting...")
+    //            buffer.wait()
+    //          } else {
+    //            println("[consumer] consuming value")
+    //            println(s"[consumer] consumed ${buffer.get()}")
+    //          }
+    //        }
+    //      }
+    //    })
 
     val consumer1 = new Consumer(buffer, "consumer-1")
     val consumer2 = new Consumer(buffer, "consumer-2")
@@ -188,5 +189,47 @@ object ThreadCommunication extends App {
     producer.join()
   }
 
-  multipleProdCons
+  def queueBasedProdCons(): Unit = {
+    val buffer: mutable.Queue[Int] = new mutable.Queue()
+    val MAX_CAPACITY: Int = 3
+
+    val producer = new Thread(() => {
+      buffer.synchronized {
+        while (true) {
+          while (buffer.size == MAX_CAPACITY) {
+            println(s"[producer] buffer is full, waiting...")
+            buffer.wait()
+          }
+          println(s"[producer] generating...")
+          val generatedValue = Random.nextInt()
+          println(s"[producer] generated $generatedValue")
+          buffer.enqueue(generatedValue)
+          println(s"[producer] notifying waiting threads")
+          buffer.notifyAll()
+        }
+      }
+    })
+
+    val consumer = new Thread(() => {
+      buffer.synchronized {
+        while (true) {
+          while (buffer.isEmpty) {
+            println(s"[consumer] buffer is empty, waiting...")
+            buffer.wait()
+          }
+          val consumedValue = buffer.dequeue()
+          println(s"[consumer] consumed $consumedValue")
+          println(s"[consumer] notifying waiting threads")
+          buffer.notifyAll()
+        }
+      }
+    })
+
+    producer.start()
+    consumer.start()
+    producer.join()
+    consumer.join()
+  }
+
+  queueBasedProdCons()
 }
