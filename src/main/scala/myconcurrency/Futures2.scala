@@ -2,7 +2,7 @@ package myconcurrency
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, Future, Promise}
 import scala.util.{Failure, Success}
 
 object Futures2 extends App {
@@ -42,10 +42,14 @@ object Futures2 extends App {
 
   Await.result(ft, 2.seconds)
 
-//  Element not found
-//  126
-//  ft has success with value [42]
-//
-//  Process finished with exit code 0
+  //  Element not found
+  //  126
+  //  ft has success with value [42]
+  //
+  //  Process finished with exit code 0
+  val promise = Promise()
+
+  def retryUntil[T](action: () => Future[T], condition: T => Boolean): Future[T] =
+    action().filter(condition).recoverWith { case _ => retryUntil(action, condition) }
 
 }
