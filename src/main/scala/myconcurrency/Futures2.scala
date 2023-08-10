@@ -1,7 +1,8 @@
 package myconcurrency
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success}
 
 object Futures2 extends App {
@@ -25,4 +26,26 @@ object Futures2 extends App {
     case Success(value) => println(value)
     case Failure(exception) => exception.printStackTrace()
   })
+
+  val ft = Future(25).filter(_ == 12).recover {
+    case e: NoSuchElementException => {
+      println("Element not found")
+      42
+    }
+    case e: Exception => println("Generic error occurred")
+  }
+
+  ft.onComplete {
+    case Success(v) => println(s"ft has success with value [$v]")
+    case Failure(e) => e.printStackTrace()
+  }
+
+  Await.result(ft, 2.seconds)
+
+//  Element not found
+//  126
+//  ft has success with value [42]
+//
+//  Process finished with exit code 0
+
 }
